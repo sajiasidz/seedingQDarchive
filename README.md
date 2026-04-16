@@ -1,13 +1,9 @@
 # QDArchive Seeding Project
 
 **Student:** Rabeya Siddika Sajia 
-
 **Student ID:** 23084716
-
 **GitHub:** sajiasidz
-
 **University:** FAU Erlangen-Nürnberg 
-
 **Supervisor:** Prof. Dr. Dirk Riehle  
 **Course:** Data Science Project (10 ECTS)  
 **Deadline:** April 17, 2026
