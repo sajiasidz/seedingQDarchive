@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+logs/
+
+downloads/
+.playwright/
+
+# keep downloaded archives and temporary DB files out
+*.zip
+*.db-journal
