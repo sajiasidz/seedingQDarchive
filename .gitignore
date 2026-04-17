@@ -1,10 +1,25 @@
+# Python cache
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
+
+# Logs
 logs/
 
+# Downloads and private acquired files
 downloads/
+
+# Playwright login/session data
 .playwright/
 
-# keep downloaded archives and temporary DB files out
-*.zip
+# Temporary database files
 *.db-journal
+*.sqlite-journal
+
+# System/editor files
+.DS_Store
+Thumbs.db
+
+# External validator repo
+sq26-grading/
