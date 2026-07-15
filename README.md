@@ -8,30 +8,46 @@
 
 ## Overview
 
-This project seeds the [QDArchive](https://qdarchive.org) repository by harvesting qualitative data analysis (QDA) files and metadata from assigned data repositories. The goal is to collect datasets that contain QDA project files (e.g. NVivo, ATLAS.ti, MAXQDA) and store their metadata in a structured SQLite database.
+This project supports the seeding of QDArchive by collecting metadata and files from qualitative data repositories and then classifying the collected projects. The work is divided into two parts:
 
+- **Part 1: Data acquisition** from DANS and ICPSR
+- **Part 2: Project type filtering and ISIC Rev. 5 classification**
 
-**Assigned repositories:**
-- **DANS** (`repository_id = 5`) — https://dans.knaw.nl/en/
-- **ICPSR** (`repository_id = 15`) — https://icpsr.umich.edu
+The assigned repositories are:
+
+| Repository | repository_id | URL |
+|---|---:|---|
+| DANS | 5 | https://dans.knaw.nl/en/ |
+| ICPSR | 15 | https://icpsr.umich.edu |
 
 ## Repository Structure
 
 ```
 .
-├── config.py              # global settings, paths, repository IDs, search terms, limits
-├── dans_api.py            # DANS search, metadata extraction, and file download logic
-├── dans_downloader.py     # runner script for the DANS acquisition workflow
-├── database.py            # SQLite schema, insert functions, and CSV export
-├── downloader.py          # shared helper functions for downloading files and cleaning file names
-├── icpsr_downloader.py    # runner script for the ICPSR acquisition workflow
-├── icpsr_playwright.py    # ICPSR search, login handling, metadata collection, and download automation
-├── downloads/             # downloaded repository files
-│   ├── dans/              # downloaded files from DANS
-│   └── icpsr_private/     # downloaded files from ICPSR (private/internal use)
-├── db/                    # SQLite metadata database
-    ├── 23084716-sq26.db   # SQLite metadata database (submission file)
-    ├── metadata.db        # Working copy of the database
+├── config.py                             # global settings, paths, repository IDs, search terms, limits
+├── dans_api.py                           # DANS search, metadata extraction, and file download logic
+├── dans_downloader.py                    # runner script for the DANS acquisition workflow
+├── database.py                           # SQLite schema, insert functions, and CSV export
+├── downloader.py                         # shared helper functions for downloading files and cleaning file names
+├── icpsr_downloader.py                   # runner script for the ICPSR acquisition workflow
+├── icpsr_playwright.py                   # ICPSR search, login handling, metadata collection, and download automation
+├── class_1_project_type.py
+├── class_2_import_isic.py
+├── class_3_prepare_targets.py
+├── classi_4_run_isic_classifier.py
+├── class_5_create_submission_xlsx.py
+├── class_6_create_final_db_copy.py
+├── class_7_create_pdf_report.py
+├── downloads/                            # downloaded repository files
+│   ├── dans/                             # downloaded files from DANS
+│   └── icpsr_private/                    # downloaded files from ICPSR (private/internal use)
+├── db/                                   # SQLite metadata database
+    ├── 23084716-sq26-classification.db   # SQLite metadata database (submission file)
+    ├── metadata.db                       # Working copy of the database
+├── exports/
+    ├── 23084716-sq26-classification-table.xlsx
+    ├── 23084716-sq26-classification-report.pdf
+    └── report_stats/
 
 
 ```
@@ -40,7 +56,7 @@ This project seeds the [QDArchive](https://qdarchive.org) repository by harvesti
 
 ## Database Schema
 
-The metadata is stored in a 5-table SQLite database following the QDArchive schema:
+The original acquisition database contains these core tables:
 
 | Table | Description |
 |---|---|
@@ -50,64 +66,128 @@ The metadata is stored in a 5-table SQLite database following the QDArchive sche
 | `person_role` | Authors/contributors and their roles |
 | `licenses` | License information per project |
 
-### File Download Status Values
-- `SUCCEEDED` — File downloaded successfully
-- `RESTRICTED` — Restricted access, only metadata taken
-- `FAILED_LOGIN_REQUIRED` — File requires authentication
-- `FAILED_SERVER_UNRESPONSIVE` — Server error or rate limit
-- `FAILED_TOO_LARGE` — File skipped (audio/video or >200MB)
+Part 2 adds these tables/fields:
 
----
+| Table / Field | Purpose |
+|---|---|
+| `projects.project_type` | QDA_PROJECT, QD_PROJECT, OTHER_PROJECT, or NOT_A_PROJECT |
+| `isic_sections` | ISIC Rev. 5 section-level taxonomy |
+| `isic_divisions` | ISIC Rev. 5 division-level taxonomy |
+| `classification_targets` | Project-level and file-level inputs for classification |
+| `classification_results` | Primary and secondary ISIC classification results |
+
+## Part 1: Data Acquisition
+
+### DANS
+
+DANS is accessed through the Dataverse API. The pipeline searches for qualitative data candidates, collects project metadata, downloads eligible files, and stores all results in the SQLite database.
+
+### ICPSR
+
+ICPSR is accessed with Playwright because the website is JavaScript-based and may require login. The pipeline saves a browser session, collects likely qualitative studies, and stores metadata. In this run, ICPSR files were restricted or login-required, so the database contains metadata-only records for ICPSR.
+
+## Part 2: Classification Workflow
+
+The classification workflow is implemented in separate step scripts:
+
+| Step | Script | Output |
+|---|---|---|
+| 1 | `classification_step1_project_type.py` | Adds `project_type` to `projects` |
+| 2 | `classification_step2_import_isic.py` | Imports ISIC sections and divisions |
+| 3 | `classification_step3_prepare_targets.py` | Creates project/file classification targets |
+| 4 | `classification_step4_run_isic_classifier.py` | Runs TF-IDF ISIC classifier |
+| 5 | `classification_step5_create_submission_xlsx.py` | Creates final XLSX table |
+| 6 | `classification_step6_create_final_db_copy.py` | Creates final database copy |
+| 7 | `classification_step7_create_report_statistics.py` | Creates report statistics and SVG charts |
+| 8 | `classification_step8_create_pdf_report.py` | Creates final PDF report |
+
+The classifier uses **ISIC Rev. 5 division-level classes**. It classifies only `QDA_PROJECT` and `QD_PROJECT` entries, including both project-level targets and primary-data-file targets.
 
 ## Results Summary
 
-| Repository | Projects | Files Downloaded |
-|---|---|---|
-| DANS | 5804 | 53707 |
-| ICPSR | 132 | 0 |
-| **Total** | **5936** | **53707** |
+### Project counts by repository
 
----
+| Repository | Projects |
+|---|---:|
+| DANS | 5804 |
+| ICPSR | 132 |
+| **Total** | **5936** |
+
+### Project type distribution
+
+| Repository | Project type | Count |
+|---|---|---:|
+| DANS | QDA_PROJECT | 7 |
+| DANS | QD_PROJECT | 4570 |
+| DANS | OTHER_PROJECT | 1220 |
+| DANS | NOT_A_PROJECT | 7 |
+| ICPSR | NOT_A_PROJECT | 132 |
+
+### Classification results
+
+| Target level | Count |
+|---|---:|
+| Project-level targets | 4577 |
+| File-level primary data targets | 63932 |
+| **Total classification results** | **68509** |
+
+ICPSR is included in the final XLSX table, but its ISIC class fields are empty because all ICPSR projects were classified as `NOT_A_PROJECT`. This happened because the available ICPSR records were metadata-only, restricted, or login-required and did not provide usable file extensions for project-type detection.
+
+## Final Submission Files
+
+The main final outputs are:
+
+```text
+db/23084716-sq26-classification.db
+exports/23084716-sq26-classification-table.xlsx
+exports/23084716-sq26-classification-report.pdf
+```
+
+The XLSX table contains:
+
+```text
+repository_id
+project_type
+project_title
+primary_class
+secondary_class
+no_project_files
+```
+
+`OTHER_PROJECT` and `NOT_A_PROJECT` rows are included for completeness, but their ISIC classification fields are intentionally empty.
 
 ## How to Run
 
-### Install dependencies:
+Install dependencies:
+
 ```bash
-pip install pandas requests playwright
+pip install pandas requests playwright openpyxl scikit-learn matplotlib reportlab
 playwright install
 ```
 
-### Run DANS acquisition
+Run acquisition if needed:
+
 ```bash
 python dans_downloader.py
-```
-
-### Save ICPSR login session
-```bash
 python icpsr_playwright.py login
-```
-
-### Run ICPSR acquisition
-```bash
 python icpsr_downloader.py
 ```
 
----
+Run Part 2 classification workflow:
 
-## Downloader Details
+```bash
+python class_1_project_type.py
+python class_2_import_isic.py
+python class_3_prepare_targets.py
+python class_4_run_isic_classifier.py
+python class_5_create_submission_xlsx.py
+python class_6_create_final_db_copy.py
+python class_7_create_pdf_report.py
+```
 
-### DANS (Data Archiving and Networked Services)
-- Uses the Dataverse API to search DANS datasets and collect candidate project IDs.
-- Extracts project metadata such as title, description, language, keywords, authors, version, and license information before downloading files.
-- Downloads files individually using the DANS file access endpoint instead of downloading one large bundle.
-- Excludes audio and video files based on file extension or content type and also files larger than 300 MB.
-- Stores both project metadata and file status in the SQLite database during ingestion.
+## Notes
 
-### ICPSR (Inter-university Consortium for Political and Social Research)
-- Uses Playwright because ICPSR is JavaScript-driven and requires browser interaction for searching and downloading.
-- Reuses a persistent browser profile so the login session can be saved and reused across runs.
-- Filters study pages to keep likely qualitative studies and skips pages that return service unavailable errors.
-- Detects restricted studies and stores them as metadata only without downloading files.
-- Saves file statuses such as downloaded, restricted, no_download_links_found, skipped_audio_video, and skipped_too_large in the database.
-
-
+- The classification is an automatic first-pass classification, not manually validated.
+- TF-IDF similarity was used because it is simple, reproducible, and transparent.
+- Low-confidence or unexpected classes can occur when project metadata is short or generic.
+- The repository should be tagged as `classification-results` for the final Part 2 submission.
