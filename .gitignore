@@ -1,25 +1,25 @@
-# Python cache
 __pycache__/
 *.pyc
-*.pyo
-*.pyd
-
-# Logs
 logs/
 
-# Downloads and private acquired files
 downloads/
-
-# Playwright login/session data
 .playwright/
 
-# Temporary database files
+# Ignore compressed archives by default
+*.zip
+*.7z
+
+# But allow the final compressed database submission file
+!db/23084716-sq26-classification.db.zip
+
+# Ignore working and backup databases
+db/metadata.db
+db/metadata_before_*.db
+
+# Ignore the large uncompressed final database if you are pushing the ZIP instead
+db/23084716-sq26-classification.db
+
+# SQLite temporary files
 *.db-journal
-*.sqlite-journal
-
-# System/editor files
-.DS_Store
-Thumbs.db
-
-# External validator repo
-sq26-grading/
+*.db-wal
+*.db-shm
