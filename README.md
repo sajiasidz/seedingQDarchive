@@ -24,30 +24,30 @@ The assigned repositories are:
 
 ```
 .
-├── config.py                             # global settings, paths, repository IDs, search terms, limits
-├── dans_api.py                           # DANS search, metadata extraction, and file download logic
-├── dans_downloader.py                    # runner script for the DANS acquisition workflow
-├── database.py                           # SQLite schema, insert functions, and CSV export
-├── downloader.py                         # shared helper functions for downloading files and cleaning file names
-├── icpsr_downloader.py                   # runner script for the ICPSR acquisition workflow
-├── icpsr_playwright.py                   # ICPSR search, login handling, metadata collection, and download automation
-├── class_1_project_type.py
-├── class_2_import_isic.py
-├── class_3_prepare_targets.py
-├── classi_4_run_isic_classifier.py
-├── class_5_create_submission_xlsx.py
-├── class_6_create_final_db_copy.py
-├── class_7_create_pdf_report.py
-├── downloads/                            # downloaded repository files
-│   ├── dans/                             # downloaded files from DANS
-│   └── icpsr_private/                    # downloaded files from ICPSR (private/internal use)
-├── db/                                   # SQLite metadata database
-    ├── 23084716-sq26-classification.db   # SQLite metadata database (submission file)
-    ├── metadata.db                       # Working copy of the database
+├── config.py                                       # global settings, paths, repository IDs, search terms, limits
+├── dans_api.py                                     # DANS search, metadata extraction, and file download logic
+├── dans_downloader.py                              # runner script for the DANS acquisition workflow
+├── database.py                                     # SQLite schema, insert functions, and CSV export
+├── downloader.py                                   # shared helper functions for downloading files and cleaning file names
+├── icpsr_downloader.py                             # runner script for the ICPSR acquisition workflow
+├── icpsr_playwright.py                             # ICPSR search, login handling, metadata collection, and download automation
+├── class_1_project_type.py                         # assigns project types based on file extensions          
+├── class_2_import_isic.py                          # imports ISIC Rev. 5 sections and divisions into the database
+├── class_3_prepare_targets.py                      # prepares project-level and file-level inputs for classification
+├── class_4_run_isic_classifier.py                  # runs the TF-IDF ISIC classifier and stores classification results
+├── class_5_create_submission_xlsx.py               # creates the final XLSX submission table
+├── class_6_create_final_db.py                      # creates the final SQLite database copy for submission
+├── class_7_create_pdf_report.py                    # generates the final PDF report with statistics, analysis, and comments
+├── downloads/                                      # downloaded repository files
+│   ├── dans/                                       # downloaded files from DANS
+│   └── icpsr_private/                              # downloaded files from ICPSR (private/internal use)
+├── db/                                             # SQLite metadata database
+    ├── 23084716-sq26-classification.db             # SQLite metadata database (submission file)
+    └── metadata.db                                 # Working copy of the database
 ├── exports/
-    ├── 23084716-sq26-classification-table.xlsx
-    ├── 23084716-sq26-classification-report.pdf
-    └── report_stats/
+    ├── 23084716-sq26-classification-table.xlsx     # final XLSX table required for submission
+    └── 23084716-sq26-classification-report.pdf     # final PDF report with methodology and results
+                                  
 
 
 ```
