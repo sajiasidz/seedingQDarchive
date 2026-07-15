@@ -10,7 +10,7 @@
 
 This project supports the seeding of QDArchive by collecting metadata and files from qualitative data repositories and then classifying the collected projects. The work is divided into two parts:
 
-- **Part 1: Data acquisition** from DANS and ICPSR
+- **Part 1: Data acquisition from DANS and ICPSR**
 - **Part 2: Project type filtering and ISIC Rev. 5 classification**
 
 The assigned repositories are:
